@@ -2,6 +2,10 @@
 
 ## status: v0.1 supports bottom edge scrolling for seeking through playback.
 
+
+https://github.com/guarapicci/mpv-omniGlass/assets/143821200/c1f98f78-d917-4def-9519-02e561f87ccc
+
+
 ## how to use:
 - 1: install [libomniglass](https://github.com/guarapicci/omniGlass) (currently linux only) and specify your touchpad at the config file.
 - 2: run the install.sh script. Requires GCC and the headers for libmpv and omniglass.
