@@ -6,6 +6,8 @@
 #include <omniGlass/omniglass.h>
 #include <mpv/client.h>
 
+#define PLUG_OMNIGLASS_DEFAULT_SLIDE_SENSITIVITY 0.003
+#define PLUG_OMNIGLASS_DEFAULT_SLIDE_THRESHOLD 0.08
 double plug_omniglass_last_slide_checked = 0.0;
 int plug_omniglass_is_seeking = 0;
 
@@ -15,9 +17,10 @@ void plug_omniglass_on_bottom_edge_slide(double value){
     //deadzone (only run command past a certain value.)
     if(value == 0.0)
         return;
-    printf("edge slide detected.\n");
-    plug_omniglass_last_slide_checked += (value * 0.001);
-    if((plug_omniglass_last_slide_checked) < 0.08 && (plug_omniglass_last_slide_checked > -0.08)){
+    // printf("edge slide detected.\n");
+    plug_omniglass_last_slide_checked += (value * PLUG_OMNIGLASS_DEFAULT_SLIDE_SENSITIVITY);
+    if((plug_omniglass_last_slide_checked) < PLUG_OMNIGLASS_DEFAULT_SLIDE_THRESHOLD && 
+        (plug_omniglass_last_slide_checked > ((-1) * PLUG_OMNIGLASS_DEFAULT_SLIDE_THRESHOLD))){
          return;
     }
     if(!(plug_omniglass_is_seeking)){
@@ -26,7 +29,7 @@ void plug_omniglass_on_bottom_edge_slide(double value){
         // char **textset = malloc(sizeof(char *) * 2);
         sprintf(arg, "%f", plug_omniglass_last_slide_checked);
         const char *textset[3] = {command, arg, NULL};
-        printf("%s %s\n", textset[0], textset[1]);
+        // printf("\nomniglass: edge slide -> %s %s\n", textset[0], textset[1]);
         // mpv_command(plug_omniglass_mpv_ctx, textset);
         mpv_command_async(plug_omniglass_mpv_ctx, 201, textset);
         const char *cmd_show_progress[2] = {"show_progress", NULL};
