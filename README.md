@@ -1,6 +1,8 @@
 # mpv-omniGlass: touchpad gestures for mpv using libomniglass
 
-## status: supports two gestures.
+## now available on the Arch User Repository!
+grab a PKGBUILD at [the repository](https://aur.archlinux.org/packages/mpv-omniglass-git).
+## status: v0.2, supports two gestures.
 - **slide on bottom edge:** seek.
 - **slide on right edge:** volume control.
 
