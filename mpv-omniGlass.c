@@ -6,56 +6,85 @@
 #include <omniGlass/omniglass.h>
 #include <mpv/client.h>
 
-#define PLUG_OMNIGLASS_DEFAULT_SLIDE_SENSITIVITY 0.003
+#define PLUG_OMNIGLASS_DEFAULT_SLIDE_SENSITIVITY_SEEK 0.003
 #define PLUG_OMNIGLASS_DEFAULT_SLIDE_THRESHOLD 0.08
-double plug_omniglass_last_slide_checked = 0.0;
-int plug_omniglass_is_seeking = 0;
 
-mpv_handle *plug_omniglass_mpv_ctx;
+#define PLUG_OMNIGLASS_DEFAULT_SLIDE_SENSITIVITY_VOLUME 0.07
 
-void plug_omniglass_on_bottom_edge_slide(double value){
+struct plug_omniglass_state {
+    mpv_handle *mpv;
+    struct omniglass *omniglass;
+    //bottom edge parameters
+    double sensitivity_bottom;
+    double threshold;
+    double last_slide_checked_seek;
+    int is_seeking;
+    //right edge parameters
+    double sensitivity_right;
+};
+
+void plug_omniglass_on_bottom_edge_slide(double value, void *data){
     //deadzone (only run command past a certain value.)
     if(value == 0.0)
         return;
     // printf("edge slide detected.\n");
-    plug_omniglass_last_slide_checked += (value * PLUG_OMNIGLASS_DEFAULT_SLIDE_SENSITIVITY);
-    if((plug_omniglass_last_slide_checked) < PLUG_OMNIGLASS_DEFAULT_SLIDE_THRESHOLD && 
-        (plug_omniglass_last_slide_checked > ((-1) * PLUG_OMNIGLASS_DEFAULT_SLIDE_THRESHOLD))){
+    struct plug_omniglass_state *state = (struct plug_omniglass_state *)data;
+    state->last_slide_checked_seek += (value * state->sensitivity_bottom);
+    if((state->last_slide_checked_seek < state->threshold) && 
+        (state->last_slide_checked_seek > ((-1) * state->threshold))){
          return;
     }
-    if(!(plug_omniglass_is_seeking)){
+    if(!(state->is_seeking)){
         char *command = "seek";
         char arg[36];
         // char **textset = malloc(sizeof(char *) * 2);
-        sprintf(arg, "%f", plug_omniglass_last_slide_checked);
+        sprintf(arg, "%f", state->last_slide_checked_seek);
         const char *textset[3] = {command, arg, NULL};
         // printf("\nomniglass: edge slide -> %s %s\n", textset[0], textset[1]);
         // mpv_command(plug_omniglass_mpv_ctx, textset);
-        mpv_command_async(plug_omniglass_mpv_ctx, 201, textset);
+        mpv_command_async(state->mpv, 201, textset);
         const char *cmd_show_progress[2] = {"show_progress", NULL};
-        mpv_command_async(plug_omniglass_mpv_ctx, 200, cmd_show_progress);
+        mpv_command_async(state->mpv, 200, cmd_show_progress);
         // mpv_get_property(plug_omniglass_mpv_ctx, "time_pos)
-        plug_omniglass_last_slide_checked = 0.0;
-        plug_omniglass_is_seeking = 1;
+        state->last_slide_checked_seek = 0.0;
+        state->is_seeking = 1;
     }
 
 }
+
+void plug_omniglass_on_right_edge_slide(double value, void *data){
+    struct plug_omniglass_state *state = (struct plug_omniglass_state *)data;
+    
+    double changed_volume = 0.0;
+    mpv_get_property(state->mpv, "ao-volume", MPV_FORMAT_DOUBLE, &changed_volume);
+    changed_volume += (value *state->sensitivity_right);
+    if(changed_volume<0.0)
+        changed_volume=0.0;
+    if(changed_volume>100.0)
+        changed_volume=100.0;
+    mpv_set_property(state->mpv, "ao-volume",MPV_FORMAT_DOUBLE,&changed_volume);
+}
 int mpv_open_cplugin(mpv_handle *handle){
-    plug_omniglass_mpv_ctx = handle;
+    struct plug_omniglass_state state;
+    state.mpv = handle;
     mpv_wait_event(handle,-1);
-    struct omniglass *omniglass;
-    if (omniglass_init(&omniglass) != OMNIGLASS_RESULT_SUCCESS){
+    if (omniglass_init(&(state.omniglass)) != OMNIGLASS_RESULT_SUCCESS){
         fprintf(stderr, "could not start omniglass instance\n");
         return 0;
     }
     printf("mpv-omniglass step1: omniglass initialized.\n");
-    
-    omniglass_listen_gesture_edge(omniglass, plug_omniglass_on_bottom_edge_slide, OMNIGLASS_EDGE_BOTTOM);
+    state.is_seeking=0;
+    state.last_slide_checked_seek=0.0;
+    state.sensitivity_bottom=PLUG_OMNIGLASS_DEFAULT_SLIDE_SENSITIVITY_SEEK;
+    state.threshold=PLUG_OMNIGLASS_DEFAULT_SLIDE_THRESHOLD;
+    omniglass_listen_gesture_edge(state.omniglass, plug_omniglass_on_bottom_edge_slide, OMNIGLASS_EDGE_BOTTOM, &state);
+    state.sensitivity_right = PLUG_OMNIGLASS_DEFAULT_SLIDE_SENSITIVITY_VOLUME;
+    omniglass_listen_gesture_edge(state.omniglass, plug_omniglass_on_right_edge_slide, OMNIGLASS_EDGE_RIGHT, &state);
     
     while (1){
         mpv_event *event = mpv_wait_event(handle, 0.004);
         int exit = 0;
-        omniglass_step(omniglass);
+        omniglass_step(state.omniglass);
         // printf("stepping through touchpad state machine\n");
         
         switch(event->event_id){
@@ -63,11 +92,14 @@ int mpv_open_cplugin(mpv_handle *handle){
                 return 0;
                 break;
             // case MPV_EVENT_SEEK:
-            //     plug_omniglass_is_seeking = 0;
-            //     break;
+            //     plug_omniglass_is_seeking = 0;PLUG_OMNIGLASS_DEFAULT_SLIDE_THRESHOLD
+            //     break;PLUG_OMNIGLASS_DEFAULT_SLIDE_THRESHOLD
             case MPV_EVENT_COMMAND_REPLY:
-                if(event->reply_userdata == 200)
-                    plug_omniglass_is_seeking = 0;
+                switch(event->reply_userdata){
+                    case 200:
+                        state.is_seeking = 0;
+                        break;
+                }
                 break;
         }
         // usleep(4);
