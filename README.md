@@ -1,6 +1,8 @@
 # mpv-omniGlass: touchpad gestures for mpv using libomniglass
 
-## status: v0.1 supports bottom edge scrolling for seeking through playback.
+## status: supports two gestures.
+- **slide on bottom edge:** seek.
+- **slide on right edge:** volume control.
 
 
 https://github.com/guarapicci/mpv-omniGlass/assets/143821200/c1f98f78-d917-4def-9519-02e561f87ccc
