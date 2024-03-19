@@ -6,9 +6,7 @@ grab a PKGBUILD at [the repository](https://aur.archlinux.org/packages/mpv-omnig
 - **slide on bottom edge:** seek.
 - **slide on right edge:** volume control.
 
-
-https://github.com/guarapicci/mpv-omniGlass/assets/143821200/c1f98f78-d917-4def-9519-02e561f87ccc
-
+https://github.com/guarapicci/mpv-omniGlass/assets/143821200/d76cfa4c-902c-4cea-83ea-c51126f85f82
 
 ## how to use:
 - 1: install [libomniglass](https://github.com/guarapicci/omniGlass) (currently linux only) and specify your touchpad at the config file.
