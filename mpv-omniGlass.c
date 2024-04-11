@@ -6,10 +6,10 @@
 #include <omniGlass/omniglass.h>
 #include <mpv/client.h>
 
-#define PLUG_OMNIGLASS_DEFAULT_SLIDE_SENSITIVITY_SEEK 0.003
-#define PLUG_OMNIGLASS_DEFAULT_SLIDE_THRESHOLD 0.08
+#define PLUG_OMNIGLASS_DEFAULT_SLIDE_SENSITIVITY_SEEK 0.09
+#define PLUG_OMNIGLASS_DEFAULT_SLIDE_THRESHOLD 0.03
 
-#define PLUG_OMNIGLASS_DEFAULT_SLIDE_SENSITIVITY_VOLUME 0.07
+#define PLUG_OMNIGLASS_DEFAULT_SLIDE_SENSITIVITY_VOLUME 7
 
 struct plug_omniglass_state {
     mpv_handle *mpv;
@@ -40,10 +40,10 @@ void plug_omniglass_on_bottom_edge_slide(double value, void *data){
         // char **textset = malloc(sizeof(char *) * 2);
         sprintf(arg, "%f", state->last_slide_checked_seek);
         const char *textset[3] = {command, arg, NULL};
-        // printf("\nomniglass: edge slide -> %s %s\n", textset[0], textset[1]);
+        printf("\nomniglass: edge slide -> %s %s\n", textset[0], textset[1]);
         // mpv_command(plug_omniglass_mpv_ctx, textset);
         mpv_command_async(state->mpv, 201, textset);
-        const char *cmd_show_progress[2] = {"show_progress", NULL};
+        const char *cmd_show_progress[2] = {"show-progress", NULL};
         mpv_command_async(state->mpv, 200, cmd_show_progress);
         // mpv_get_property(plug_omniglass_mpv_ctx, "time_pos)
         state->last_slide_checked_seek = 0.0;
