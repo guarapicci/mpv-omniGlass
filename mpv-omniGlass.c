@@ -43,7 +43,7 @@ void plug_omniglass_on_bottom_edge_slide(double value, void *data){
         printf("\nomniglass: edge slide -> %s %s\n", textset[0], textset[1]);
         // mpv_command(plug_omniglass_mpv_ctx, textset);
         mpv_command_async(state->mpv, 201, textset);
-        const char *cmd_show_progress[2] = {"show-progress", NULL};
+        const char *cmd_show_progress[3] = {"osd-bar", "show-progress", NULL};
         mpv_command_async(state->mpv, 200, cmd_show_progress);
         // mpv_get_property(plug_omniglass_mpv_ctx, "time_pos)
         state->last_slide_checked_seek = 0.0;
